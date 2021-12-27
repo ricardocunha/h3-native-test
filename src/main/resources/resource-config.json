@@ -1,0 +1,10 @@
+{
+  "resources": [
+    {
+      "pattern": "linux-x64/libh3-java.so"
+    },
+    {
+      "pattern": "/tmp/libh3-java.so"
+    }
+  ]
+}
