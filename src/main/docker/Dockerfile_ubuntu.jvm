@@ -21,10 +21,10 @@
 # docker run -i --rm -p 8080:8080 quarkus/h3-native-test-jvm
 #
 ###
-FROM registry.access.redhat.com/ubi8/openjdk-11-runtime:1.10
+FROM openjdk:11
 USER root
 RUN ldconfig --version
-RUN cat /etc/resolv.conf
+
 RUN chmod 775 /tmp
 RUN chmod 775 /usr/lib/
 USER 185

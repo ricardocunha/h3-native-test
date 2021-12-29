@@ -1,0 +1,92 @@
+####
+# This Dockerfile is used in order to build a container that runs the Quarkus application in JVM mode
+#
+# Before building the container image run:
+#
+# ./mvnw package
+#
+# Then, build the image with:
+#
+# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/h3-native-test-jvm .
+#
+# Then run the container using:
+#
+# docker run -i --rm -p 8080:8080 quarkus/h3-native-test-jvm
+#
+# If you want to include the debug port into your docker image
+# you will have to expose the debug port (default 5005) like this :  EXPOSE 8080 5005
+#
+# Then run the container using :
+#
+# docker run -i --rm -p 8080:8080 quarkus/h3-native-test-jvm
+#
+###
+#FROM registry.access.redhat.com/ubi8/openjdk-11-runtime:1.10
+FROM registry.access.redhat.com/quarkus/mandrel-21-rhel8:latest
+USER root
+RUN cat /etc/resolv.conf
+RUN curl -v google.com
+RUN ldconfig --version
+RUN microdnf install yum
+RUN microdnf install wget
+RUN microdnf install tar
+RUN microdnf install gzip
+RUN microdnf install sudo
+RUN microdnf install which
+RUN ldconfig --version
+RUN yum install gcc -y
+RUN yum install python3 -y
+RUN yum install perl -y
+RUN yum install m4 -y
+RUN yum install make -y
+RUN yum install diffutils -y
+#RUN yum install bison -y
+#RUN wget http://mirror.centos.org/centos/7/os/x86_64/Packages/texinfo-5.1-5.el7.x86_64.rpm
+#RUN yum install texinfo-5.1-5.el7.x86_64.rpm -y --skip-broken
+RUN make -v
+RUN wget http://www.rpmfind.net/linux/centos/7.9.2009/os/x86_64/Packages/bison-3.0.4-2.el7.x86_64.rpm
+RUN yum localinstall bison-3.0.4-2.el7.x86_64.rpm -y
+RUN which bison
+#RUN wget http://ftp.gnu.org/gnu/bison/bison-3.7.5.tar.gz
+#RUN tar -xvzf bison-3.7.5.tar.gz
+#RUN cd bison-3.7.5 && ./configure --prefix=/usr/local/bison --with-libiconv-prefix=/usr/local/libiconv/ && \
+#                      make && \
+#                      sudo make install
+#RUN which bison
+RUN wget http://ftp.gnu.org/gnu/glibc/glibc-2.29.tar.gz
+RUN tar zxvf glibc-2.29.tar.gz && \
+ cd glibc-2.29 && \
+ pwd && \
+ mkdir build && \
+ cd build && \
+ ../configure --prefix=/opt/glibc-2.29 && \
+ make -j4 && \
+ sudo make install
+RUN chmod 775 /tmp
+RUN chmod 775 /usr/lib/
+#ENV LD_LIBRARY_PATH_TESTE1=/opt/glibc-2.29/lib
+RUN echo $LD_LIBRARY_PATH
+RUN uname -a
+ENV LD_LIBRARY_PATH="/opt/glibc-2.29/lib"
+RUN ldconfig --version
+RUN echo $LD_LIBRARY_PATH
+USER 185
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+
+# Configure the JAVA_OPTIONS, you can add -XshowSettings:vm to also display the heap size.
+ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+# We make four distinct layers so if there are application changes the library layers can be re-used
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/*.jar /deployments/
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
+
+EXPOSE 8080
+USER 185
+
+
+
+
+ENTRYPOINT [ "java", "-jar", "/deployments/quarkus-run.jar" ]
+

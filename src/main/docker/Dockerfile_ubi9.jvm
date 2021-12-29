@@ -21,10 +21,35 @@
 # docker run -i --rm -p 8080:8080 quarkus/h3-native-test-jvm
 #
 ###
-FROM registry.access.redhat.com/ubi8/openjdk-11-runtime:1.10
+#FROM registry.access.redhat.com/ubi9-beta/ubi-micro:latest
+FROM registry.access.redhat.com/ubi9-beta/ubi:9.0.0beta
 USER root
 RUN ldconfig --version
+RUN yum install --version
+RUN curl -v 192.168.31.1
 RUN cat /etc/resolv.conf
+#ADD microdnf-3.8.0-3.el9.x86_64.rpm microdnf-3.8.0-3.el9.x86_64.rpm
+#RUN telnet 192.168.31.1
+
+RUN curl http://mirror.stream.centos.org/9-stream/BaseOS/x86_64/os/Packages/microdnf-3.8.0-3.el9.x86_64.rpm
+#RUN yum install microdnf -y
+ARG JAVA_PACKAGE=java-11-openjdk-headless
+ARG RUN_JAVA_VERSION=1.3.8
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
+# Install java and the run-java script
+# Also set up permissions for user `1001`
+RUN microdnf install curl ca-certificates ${JAVA_PACKAGE} \
+    && microdnf update \
+    && microdnf clean all \
+    && mkdir /deployments \
+    && chown 1001 /deployments \
+    && chmod "g+rwX" /deployments \
+    && chown 1001:root /deployments \
+    && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/${RUN_JAVA_VERSION}/run-java-sh-${RUN_JAVA_VERSION}-sh.sh -o /deployments/run-java.sh \
+    && chown 1001 /deployments/run-java.sh \
+    && chmod 540 /deployments/run-java.sh \
+    && echo "securerandom.source=file:/dev/urandom" >> /etc/alternatives/jre/conf/security/java.security
+
 RUN chmod 775 /tmp
 RUN chmod 775 /usr/lib/
 USER 185

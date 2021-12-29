@@ -5,6 +5,9 @@
     },
     {
       "pattern": "/tmp/libh3-java.so"
+    },
+    {
+      "pattern": "/usr/lib/libh3-java.so"
     }
   ]
 }

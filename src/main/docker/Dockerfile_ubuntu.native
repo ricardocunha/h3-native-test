@@ -14,9 +14,17 @@
 # docker run -i --rm -p 8080:8080 quarkus/h3-native-test
 #
 ###
-FROM quay.io/quarkus/quarkus-micro-image:1.0
-#FROM quay.io/quarkus/ubi-quarkus-native-image:20.3.3-java11
-#FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5
+FROM openjdk:11
+
+ENV ES_HOST=host.docker.internal:9200
+ENV LOCATOR_INDEX_NAME=locator-index-dev
+ENV ROUTE_CALCULATOR_NAME=route-calculator-dev
+ENV STATION_INDEX_NAME=stations-000001
+ENV LOCATION_REGION=us-east-2
+ENV API_URL=host.docker.internal:8090
+ENV DB_HOST=host.docker.internal
+ENV DB_NAME=chargers
+
 WORKDIR /work/
 RUN chown 1001 /work \
     && chmod "g+rwX" /work \
@@ -25,7 +33,7 @@ RUN chmod 775 /tmp
 RUN chmod 775 /usr/lib/
 RUN ldconfig --version
 COPY --chown=1001:root target/*-runner /work/application
-
+#COPY --chown=1001:root *-runner /work/application2
 EXPOSE 8080
 USER 1001
 
